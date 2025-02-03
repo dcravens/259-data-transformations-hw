@@ -1,12 +1,12 @@
 #PSYC 259 Homework 2 - Data Transformation
 #For full credit, provide answers for at least 7/10
 
-#List names of students collaborating with: 
+#List names of students collaborating with: N/A
 
 ### SETUP: RUN THIS BEFORE STARTING ----------
 
 #Load packages
-library(tidyverse)
+library(tidyverse) 
 ds <- read_csv("data_raw/rolling_stone_500.csv")
   
 ### Question 1 ---------- 
@@ -16,7 +16,15 @@ ds <- read_csv("data_raw/rolling_stone_500.csv")
 #Use typeof to check that your conversion succeeded
 
 #ANSWER
+glimpse(ds)
 
+# Convert "Year" to numeric
+ds <- ds %>%
+  mutate(Year = as.numeric(Year))
+
+# Check data set
+glimpse(ds)
+typeof(ds$Year)
 
 ### Question 2 ---------- 
 
@@ -24,6 +32,11 @@ ds <- read_csv("data_raw/rolling_stone_500.csv")
 # change ds so that all of the variables are lowercase
 
 #ANSWER
+ds <- ds %>%
+  rename_with(tolower)
+
+# Check the updated column names
+colnames(ds)
 
 ### Question 3 ----------
 
@@ -32,12 +45,24 @@ ds <- read_csv("data_raw/rolling_stone_500.csv")
 # Hint: read the documentation for ?floor
 
 #ANSWER
+# Create a new variable for the decade
+ds <- ds %>%
+  mutate(decade = floor(year / 10) * 10)
+
+# View the first few rows to confirm
+head(ds)
 
 ### Question 4 ----------
 
 # Sort the dataset by rank so that 1 is at the top
 
 #ANSWER
+# Sort dataset by rank
+ds <- ds %>%
+  arrange(rank)
+
+# View the first few rows to confirm
+head(ds)
 
 ### Question 5 ----------
 
@@ -45,7 +70,13 @@ ds <- read_csv("data_raw/rolling_stone_500.csv")
 # That just has the artists and songs for the top 10 songs
 
 #ANSWER
+# Create 'top10' tibble with only artists and songs for the top 10 ranked songs
+top10 <- ds %>%
+  filter(rank <= 10) %>%
+  select(artist, song)
 
+# View the result
+top10
 
 ### Question 6 ----------
 
@@ -53,7 +84,16 @@ ds <- read_csv("data_raw/rolling_stone_500.csv")
 # of all songs on the full list. Save it to a new tibble called "ds_sum"
 
 #ANSWER
+# Create summary tibble with earliest, most recent, and average release year
+ds_sum <- ds %>%
+  summarize(
+    earliest_year = min(year, na.rm = TRUE),
+    most_recent_year = max(year, na.rm = TRUE),
+    average_year = mean(year, na.rm = TRUE)
+  )
 
+# View the summary
+ds_sum
 
 ### Question 7 ----------
 
@@ -62,7 +102,15 @@ ds <- read_csv("data_raw/rolling_stone_500.csv")
 # Use one filter command only, and sort the responses by year
 
 #ANSWER
+library(dplyr)
 
+# Find the songs from the earliest, most recent, and closest-to-average years
+ds_filtered <- ds %>%
+  filter(year %in% c(ds_sum$earliest_year, ds_sum$most_recent_year, round(ds_sum$average_year))) %>%
+  arrange(year)
+
+# View the result
+ds_filtered
 
 ### Question 8 ---------- 
 
@@ -73,7 +121,32 @@ ds <- read_csv("data_raw/rolling_stone_500.csv")
 # find the correct oldest, averag-ist, and most recent songs
 
 #ANSWER
+library(dplyr)
 
+# Fix the incorrect year for "Brass in Pocket"
+ds <- ds %>%
+  mutate(year = ifelse(song == "Brass in Pocket", 1979, year))
+
+# Recalculate decade
+ds <- ds %>%
+  mutate(decade = floor(year / 10) * 10)
+
+# Recalculate summary statistics
+ds_sum <- ds %>%
+  summarize(
+    earliest_year = min(year, na.rm = TRUE),
+    most_recent_year = max(year, na.rm = TRUE),
+    average_year = mean(year, na.rm = TRUE)
+  )
+
+# Find the correct oldest, most recent, and average-ist songs
+ds_filtered <- ds %>%
+  filter(year %in% c(ds_sum$earliest_year, ds_sum$most_recent_year, round(ds_sum$average_year))) %>%
+  arrange(year)
+
+# View the results
+ds_sum
+ds_filtered
 
 ### Question 9 ---------
 
@@ -84,7 +157,14 @@ ds <- read_csv("data_raw/rolling_stone_500.csv")
 # Use the pipe %>% to string the commands together
 
 #ANSWER
-
+# Summarize average rank and count of songs by decade
+ds %>%
+  filter(!is.na(decade)) %>%  # Remove NA values from decade
+  group_by(decade) %>%        # Group by decade
+  summarize(
+    avg_rank = mean(rank, na.rm = TRUE),  # Calculate average rank
+    song_count = n()                      # Count number of songs
+  )
 
 ### Question 10 --------
 
@@ -95,4 +175,9 @@ ds <- read_csv("data_raw/rolling_stone_500.csv")
 
 #ANSWER
 
+# Count the number of songs by decade and find the decade with the most songs
+ds %>%
+  filter(!is.na(decade)) %>%  # Remove rows with NA in 'decade'
+  count(decade) %>%           # Count songs per decade
+  slice_max(n = 1, order_by = n)  # Select the decade with the most songs
   
