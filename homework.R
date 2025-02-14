@@ -1,5 +1,5 @@
 #PSYC 259 Homework 2 - Data Transformation
-#For full credit, provide answers for at least 7/10
+#For full credit, provide answers for at least 7/10 (10/10)
 
 #List names of students collaborating with: N/A
 
@@ -109,6 +109,11 @@ ds_filtered <- ds %>%
   filter(year %in% c(ds_sum$earliest_year, ds_sum$most_recent_year, round(ds_sum$average_year))) %>%
   arrange(year)
 
+#Mcomment: Looks good, you can also use an OR command within filter
+ds %>% filter(year == round(ds_sum$min_yr) | 
+                year == round(ds_sum$mean_yr) | 
+                year == round(ds_sum$max_yr) ) %>% arrange(year)
+
 # View the result
 ds_filtered
 
@@ -180,4 +185,6 @@ ds %>%
   filter(!is.na(decade)) %>%  # Remove rows with NA in 'decade'
   count(decade) %>%           # Count songs per decade
   slice_max(n = 1, order_by = n)  # Select the decade with the most songs
-  
+
+#Mcomment: Looks good! the key only has slice_max(n), so I think you can go without the other commands (at least for this example)
+ds %>% count(decade) %>% slice_max(n)
